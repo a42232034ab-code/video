@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>台本×画像 動画メーカー</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <h1>台本 × 画像 動画メーカー</h1>
+  <p class="subtitle">台本(テキスト)と画像を用意するだけで、ナレーション付きの動画を自動生成します。</p>
+</header>
+
+<main class="layout">
+  <section class="scenes-panel">
+    <div class="scenes-panel-head">
+      <h2>シーン</h2>
+      <button type="button" id="addSceneBtn" class="btn btn-secondary">+ シーンを追加</button>
+    </div>
+    <div id="sceneList" class="scene-list"></div>
+  </section>
+
+  <aside class="settings-panel">
+    <h2>設定</h2>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="narrationToggle" checked />
+        音声ナレーションを生成する
+      </label>
+      <p id="narrationHint" class="hint"></p>
+    </div>
+
+    <div class="field" id="voiceFields">
+      <label for="genderSelect">声</label>
+      <select id="genderSelect">
+        <option value="neutral">ニュートラル</option>
+        <option value="female">女性</option>
+        <option value="male">男性</option>
+      </select>
+
+      <label for="languageSelect">言語</label>
+      <select id="languageSelect">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="captionsToggle" checked />
+        字幕を表示する
+      </label>
+      <p id="captionsHint" class="hint"></p>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="kenBurnsToggle" />
+        ゆっくりズーム効果 (Ken Burns)
+      </label>
+    </div>
+
+    <div class="field">
+      <label for="aspectSelect">画面の比率</label>
+      <select id="aspectSelect">
+        <option value="16:9">16:9(横長 / YouTubeなど)</option>
+        <option value="9:16">9:16(縦長 / ショート動画)</option>
+        <option value="1:1">1:1(正方形)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="bgmInput">BGM(任意)</label>
+      <input type="file" id="bgmInput" accept="audio/*" />
+      <label for="bgmVolume" class="small-label">BGM音量: <span id="bgmVolumeLabel">15%</span></label>
+      <input type="range" id="bgmVolume" min="0" max="60" value="15" />
+    </div>
+
+    <button type="button" id="generateBtn" class="btn btn-primary">動画を生成する</button>
+
+    <div id="progressArea" class="progress-area hidden">
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <p id="progressMessage" class="hint"></p>
+    </div>
+
+    <div id="errorArea" class="error-area hidden"></div>
+
+    <div id="resultArea" class="result-area hidden">
+      <h3>完成した動画</h3>
+      <video id="resultVideo" controls></video>
+      <a id="downloadLink" class="btn btn-secondary" download>ダウンロード</a>
+    </div>
+  </aside>
+</main>
+
+<template id="sceneTemplate">
+  <div class="scene-card">
+    <div class="scene-card-head">
+      <span class="scene-number"></span>
+      <div class="scene-actions">
+        <button type="button" class="btn-icon move-up" title="上へ">↑</button>
+        <button type="button" class="btn-icon move-down" title="下へ">↓</button>
+        <button type="button" class="btn-icon remove" title="削除">✕</button>
+      </div>
+    </div>
+    <label class="image-drop">
+      <input type="file" class="image-input" accept="image/*" />
+      <img class="image-preview hidden" alt="" />
+      <span class="image-placeholder">画像を選択</span>
+    </label>
+    <textarea class="scene-text" placeholder="このシーンの台本(ナレーション文 / 字幕)を入力..." rows="4"></textarea>
+  </div>
+</template>
+
+<script src="/app.js"></script>
+</body>
+</html>

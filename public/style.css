@@ -1,0 +1,255 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f6fa;
+  --panel: #ffffff;
+  --border: #e0e2e8;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --primary: #3b5bdb;
+  --primary-hover: #2f4bc0;
+  --danger: #d64545;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  padding: 24px 32px 12px;
+}
+
+.app-header h1 {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  padding: 0 32px 40px;
+  align-items: start;
+}
+
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+.scenes-panel, .settings-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.settings-panel {
+  position: sticky;
+  top: 20px;
+}
+
+.scenes-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+h2 { margin: 0; font-size: 1.1rem; }
+
+.scene-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scene-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 560px) {
+  .scene-card { grid-template-columns: 1fr; }
+}
+
+.scene-card-head {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scene-number {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.scene-actions { display: flex; gap: 6px; }
+
+.btn-icon {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-icon:hover { background: #f0f1f5; }
+
+.image-drop {
+  position: relative;
+  height: 130px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: #fafbfc;
+}
+
+.image-drop:hover { border-color: var(--primary); }
+
+.image-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-placeholder {
+  color: var(--muted);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.scene-text {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.field {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label:not(.checkbox-label) {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.small-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+select, input[type="file"] {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  width: 100%;
+}
+
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:disabled { background: #a9b3d6; cursor: not-allowed; }
+
+.btn-secondary {
+  background: #eef0f5;
+  color: var(--text);
+}
+
+.btn-secondary:hover { background: #e2e4ec; }
+
+.progress-area { margin-top: 16px; }
+.progress-bar {
+  background: #eceef3;
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.error-area {
+  margin-top: 14px;
+  background: #fdecec;
+  border: 1px solid #f3c2c2;
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.result-area { margin-top: 20px; }
+.result-area video {
+  width: 100%;
+  border-radius: 8px;
+  background: #000;
+  margin-bottom: 10px;
+}
+
+.hidden { display: none !important; }
