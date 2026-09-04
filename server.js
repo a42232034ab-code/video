@@ -11,7 +11,7 @@ const tts = require('./lib/tts');
 const { RESOLUTIONS, findFontFile } = require('./lib/video');
 
 const PORT = process.env.PORT || 3000;
-const MAX_SCENES = 40;
+const MAX_LINES = 300;
 const UPLOAD_DIR = path.join(__dirname, 'data', 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -23,7 +23,7 @@ const upload = multer({
       cb(null, `${crypto.randomUUID()}${ext}`);
     },
   }),
-  limits: { fileSize: 25 * 1024 * 1024, files: MAX_SCENES + 2 },
+  limits: { fileSize: 25 * 1024 * 1024, files: MAX_LINES + 5 },
 });
 
 const app = express();
@@ -34,57 +34,89 @@ app.get('/api/config', (req, res) => {
     aspects: Object.keys(RESOLUTIONS),
     narrationAvailable: tts.isAvailable(),
     captionsAvailable: !!findFontFile(),
-    maxScenes: MAX_SCENES,
+    maxLines: MAX_LINES,
   });
 });
+
+function badRequest(message) {
+  const err = new Error(message);
+  err.statusCode = 400;
+  return err;
+}
+
+function resolveGender(value) {
+  return ['male', 'female', 'neutral'].includes(value) ? value : 'neutral';
+}
 
 app.post('/api/generate', upload.any(), (req, res) => {
   const uploadedPaths = (req.files || []).map((f) => f.path);
 
   try {
-    let scenes;
-    let settings;
+    let lines;
+    let settingsInput;
     try {
-      scenes = JSON.parse(req.body.scenes || '[]');
-      settings = JSON.parse(req.body.settings || '{}');
+      lines = JSON.parse(req.body.lines || '[]');
+      settingsInput = JSON.parse(req.body.settings || '{}');
     } catch {
-      throw badRequest('scenes / settings の JSON が不正です');
+      throw badRequest('lines / settings の JSON が不正です');
     }
 
-    if (!Array.isArray(scenes) || scenes.length === 0) {
-      throw badRequest('少なくとも1つのシーンが必要です');
+    if (!Array.isArray(lines) || lines.length === 0) {
+      throw badRequest('少なくとも1行の台本が必要です');
     }
-    if (scenes.length > MAX_SCENES) {
-      throw badRequest(`シーン数は最大 ${MAX_SCENES} 件までです`);
+    if (lines.length > MAX_LINES) {
+      throw badRequest(`行数は最大 ${MAX_LINES} 件までです`);
     }
-    if (!RESOLUTIONS[settings.aspect]) {
-      settings.aspect = '16:9';
+    if (!RESOLUTIONS[settingsInput.aspect]) {
+      settingsInput.aspect = '16:9';
     }
 
     const filesByField = new Map((req.files || []).map((f) => [f.fieldname, f]));
 
-    const resolvedScenes = scenes.map((scene, i) => {
-      const file = filesByField.get(`image_${i}`);
-      if (!file) throw badRequest(`シーン ${i + 1} の画像がアップロードされていません`);
+    const resolvedLines = lines.map((line, i) => {
+      const speaker = line.speaker === 'A' || line.speaker === 'B' ? line.speaker : null;
+      const overrideFile = filesByField.get(`line_${i}_image`);
       return {
-        text: typeof scene.text === 'string' ? scene.text.slice(0, 2000) : '',
-        imagePath: file.path,
+        speaker,
+        text: typeof line.text === 'string' ? line.text.slice(0, 2000) : '',
+        customImagePath: overrideFile ? overrideFile.path : null,
       };
     });
 
+    const backgroundFile = filesByField.get('background');
+    const speakerAImage = filesByField.get('speakerA_image');
+    const speakerBImage = filesByField.get('speakerB_image');
     const bgmFile = filesByField.get('bgm');
+
+    const speakersInput = settingsInput.speakers || {};
+
     const resolvedSettings = {
-      narration: !!settings.narration,
-      gender: ['male', 'female', 'neutral'].includes(settings.gender) ? settings.gender : 'neutral',
-      language: ['ja', 'en'].includes(settings.language) ? settings.language : 'ja',
-      captions: settings.captions !== false,
-      aspect: settings.aspect,
-      kenBurns: !!settings.kenBurns,
+      narration: !!settingsInput.narration,
+      language: ['ja', 'en'].includes(settingsInput.language) ? settingsInput.language : 'ja',
+      captions: settingsInput.captions !== false,
+      aspect: settingsInput.aspect,
+      kenBurns: !!settingsInput.kenBurns,
+      backgroundPath: backgroundFile ? backgroundFile.path : null,
+      speakers: {
+        A: {
+          name: typeof speakersInput.A?.name === 'string' ? speakersInput.A.name.slice(0, 40) : '話者A',
+          gender: resolveGender(speakersInput.A?.gender),
+          imagePath: speakerAImage ? speakerAImage.path : null,
+        },
+        B: {
+          name: typeof speakersInput.B?.name === 'string' ? speakersInput.B.name.slice(0, 40) : '話者B',
+          gender: resolveGender(speakersInput.B?.gender),
+          imagePath: speakerBImage ? speakerBImage.path : null,
+        },
+        narration: {
+          gender: resolveGender(speakersInput.narration?.gender),
+        },
+      },
       bgmPath: bgmFile ? bgmFile.path : null,
-      bgmVolume: typeof settings.bgmVolume === 'number' ? Math.min(1, Math.max(0, settings.bgmVolume)) : 0.15,
+      bgmVolume: typeof settingsInput.bgmVolume === 'number' ? Math.min(1, Math.max(0, settingsInput.bgmVolume)) : 0.15,
     };
 
-    const jobId = jobsLib.startJob({ scenes: resolvedScenes, settings: resolvedSettings, cleanupPaths: uploadedPaths });
+    const jobId = jobsLib.startJob({ lines: resolvedLines, settings: resolvedSettings, cleanupPaths: uploadedPaths });
     res.json({ jobId });
   } catch (err) {
     for (const p of uploadedPaths) fs.rm(p, { force: true }, () => {});
@@ -121,12 +153,6 @@ app.get('/api/jobs/:id/video', (req, res) => {
     res.sendFile(job.outputPath);
   }
 });
-
-function badRequest(message) {
-  const err = new Error(message);
-  err.statusCode = 400;
-  return err;
-}
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
