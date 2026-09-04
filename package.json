@@ -1,0 +1,20 @@
+{
+  "name": "script-to-video",
+  "version": "1.0.0",
+  "description": "台本と画像を用意するだけで動画を作れるアプリ",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ffmpeg-static": "^5.2.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
+  }
+}

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>台本×画像 動画メーカー</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <h1>台本 × 画像 動画メーカー</h1>
+  <p class="subtitle">台本をまとめて貼り付けるだけで、2人掛け合いのナレーション動画(いわゆる「ゆっくり解説」風)を自動生成します。背景・キャラクター画像は使い回されるので、行ごとに画像を用意する必要はありません。</p>
+</header>
+
+<main class="layout">
+  <section class="main-panels">
+
+    <div class="panel">
+      <h2>話者・背景</h2>
+      <p class="hint">背景画像とキャラクター画像は動画全体で使い回されます。キャラクター画像は下部に左右で表示され、話しているときだけ表示されます。</p>
+
+      <div class="field">
+        <label>背景画像(任意)</label>
+        <label class="image-drop small">
+          <input type="file" id="backgroundInput" class="image-input" accept="image/*" />
+          <img id="backgroundPreview" class="image-preview hidden" alt="" />
+          <span class="image-placeholder">背景を選択</span>
+        </label>
+      </div>
+
+      <div class="speaker-grid">
+        <div class="speaker-box">
+          <h3>話者A(左側)</h3>
+          <input type="text" id="speakerAName" class="text-input" value="霊夢" maxlength="40" />
+          <select id="speakerAGender">
+            <option value="female">女性</option>
+            <option value="male">男性</option>
+            <option value="neutral">ニュートラル</option>
+          </select>
+          <label class="image-drop small">
+            <input type="file" id="speakerAImage" class="image-input" accept="image/*" />
+            <img id="speakerAPreview" class="image-preview hidden" alt="" />
+            <span class="image-placeholder">キャラ画像(任意)</span>
+          </label>
+        </div>
+        <div class="speaker-box">
+          <h3>話者B(右側)</h3>
+          <input type="text" id="speakerBName" class="text-input" value="魔理沙" maxlength="40" />
+          <select id="speakerBGender">
+            <option value="male">男性</option>
+            <option value="female">女性</option>
+            <option value="neutral">ニュートラル</option>
+          </select>
+          <label class="image-drop small">
+            <input type="file" id="speakerBImage" class="image-input" accept="image/*" />
+            <img id="speakerBPreview" class="image-preview hidden" alt="" />
+            <span class="image-placeholder">キャラ画像(任意)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="narrationGender">ナレーション(話者指定なし)の声</label>
+        <select id="narrationGender">
+          <option value="neutral">ニュートラル</option>
+          <option value="female">女性</option>
+          <option value="male">男性</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>台本</h2>
+      <p class="hint">
+        「話者名: セリフ」の形式で1行ずつ貼り付けてください(例: <code>霊夢: こんにちは</code>)。話者名が無い行はナレーションとして扱われます。貼り付けたら「解析して行を追加」を押してください。
+      </p>
+      <textarea id="scriptInput" class="script-textarea" rows="8" placeholder="霊夢: こんにちは、今日は○○について解説していくよ。&#10;魔理沙: おー、楽しみだぜ。&#10;霊夢: まずは基本から説明するね。"></textarea>
+      <button type="button" id="parseScriptBtn" class="btn btn-secondary">解析して行を追加</button>
+    </div>
+
+    <div class="panel">
+      <div class="scenes-panel-head">
+        <h2>行一覧</h2>
+        <button type="button" id="addLineBtn" class="btn btn-secondary">+ 行を追加</button>
+      </div>
+      <div id="lineList" class="scene-list"></div>
+    </div>
+  </section>
+
+  <aside class="settings-panel">
+    <h2>設定</h2>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="narrationToggle" checked />
+        音声ナレーションを生成する
+      </label>
+      <p id="narrationHint" class="hint"></p>
+    </div>
+
+    <div class="field" id="languageField">
+      <label for="languageSelect">言語</label>
+      <select id="languageSelect">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="captionsToggle" checked />
+        字幕を表示する
+      </label>
+      <p id="captionsHint" class="hint"></p>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-label">
+        <input type="checkbox" id="kenBurnsToggle" />
+        背景をゆっくりズーム(Ken Burns)
+      </label>
+    </div>
+
+    <div class="field">
+      <label for="aspectSelect">画面の比率</label>
+      <select id="aspectSelect">
+        <option value="16:9">16:9(横長 / YouTubeなど)</option>
+        <option value="9:16">9:16(縦長 / ショート動画)</option>
+        <option value="1:1">1:1(正方形)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="bgmInput">BGM(任意)</label>
+      <input type="file" id="bgmInput" accept="audio/*" />
+      <label for="bgmVolume" class="small-label">BGM音量: <span id="bgmVolumeLabel">15%</span></label>
+      <input type="range" id="bgmVolume" min="0" max="60" value="15" />
+    </div>
+
+    <button type="button" id="generateBtn" class="btn btn-primary">動画を生成する</button>
+
+    <div id="progressArea" class="progress-area hidden">
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <p id="progressMessage" class="hint"></p>
+    </div>
+
+    <div id="errorArea" class="error-area hidden"></div>
+
+    <div id="resultArea" class="result-area hidden">
+      <h3>完成した動画</h3>
+      <video id="resultVideo" controls></video>
+      <a id="downloadLink" class="btn btn-secondary" download>ダウンロード</a>
+    </div>
+  </aside>
+</main>
+
+<template id="lineTemplate">
+  <div class="scene-card line-card">
+    <div class="scene-card-head">
+      <span class="scene-number"></span>
+      <div class="scene-actions">
+        <select class="speaker-select">
+          <option value="">ナレーション</option>
+          <option value="A">話者A</option>
+          <option value="B">話者B</option>
+        </select>
+        <button type="button" class="btn-icon move-up" title="上へ">↑</button>
+        <button type="button" class="btn-icon move-down" title="下へ">↓</button>
+        <button type="button" class="btn-icon remove" title="削除">✕</button>
+      </div>
+    </div>
+    <textarea class="scene-text" placeholder="このセリフ/ナレーションを入力..." rows="2"></textarea>
+    <details class="line-image-details">
+      <summary>この行だけの画像(任意・背景/キャラより優先)</summary>
+      <label class="image-drop small">
+        <input type="file" class="image-input line-image-input" accept="image/*" />
+        <img class="image-preview hidden" alt="" />
+        <span class="image-placeholder">画像を選択</span>
+      </label>
+    </details>
+  </div>
+</template>
+
+<script src="/app.js"></script>
+</body>
+</html>
